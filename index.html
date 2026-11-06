@@ -137,7 +137,7 @@
           <i class="fa-solid fa-sliders text-brand-neon"></i> إعدادات التوليد
         </h3>
 
-        <!-- اختيار النموذج (إلزامي من الـ API) -->
+        <!-- اختيار النموذج -->
         <div>
           <label class="block text-sm font-bold text-gray-300 mb-3">
             <i class="fa-solid fa-cube text-brand-accent"></i> النموذج (Model)
@@ -196,7 +196,7 @@
         </div>
 
         <div class="mt-4">
-          <a id="downloadBtn" download="ai-video.mp4" class="w-full bg-dark-bg border border-dark-border opacity-50 cursor-not-allowed text-center py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition hover:bg-gray-800">
+          <a id="downloadBtn" download="ai-video.mp4" target="_blank" class="w-full bg-dark-bg border border-dark-border opacity-50 cursor-not-allowed text-center py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition hover:bg-gray-800">
             <i class="fa-solid fa-download"></i> تحميل الفيديو الناتج
           </a>
         </div>
@@ -207,7 +207,6 @@
   <script>
     const API_BASE = 'https://api.jerexd.my.id/api/ai/txt2video';
     const API_KEY  = 'XAv-gBIg9Y0ClWRe';
-    const MODELS   = ['3d', 'realistic', 'cartoon', 'anime'];
     let selectedModel = 'realistic';
 
     const promptInput     = document.getElementById('promptInput');
@@ -250,7 +249,6 @@
       modelsRow.querySelectorAll('.model-btn').forEach(b => b.disabled = disabled);
     };
 
-
     const setBadge = (text, color = 'gray') => {
       statusBadge.innerText = text;
       const map = {
@@ -262,44 +260,48 @@
       statusBadge.className = `text-xs px-3 py-1 rounded-full border ${map[color] || map.gray}`;
     };
 
-
     async function generateVideo(prompt, model) {
       const targetUrl = `${API_BASE}?apikey=${encodeURIComponent(API_KEY)}&prompt=${encodeURIComponent(prompt)}&model=${encodeURIComponent(model)}`;
-const url = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
-
+      
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 180_000); // 3 دقائق
 
       let response;
       try {
-        response = await fetch(url, { signal: controller.signal });
+        // المحاولة الأولى: طلب مباشر للـ API
+        response = await fetch(targetUrl, { signal: controller.signal });
+      } catch (err) {
+        // في حال وجود حظر CORS من المتصفح، يتم التحويل تلقائياً لوكيل CORS
+        if (err.name !== 'AbortError') {
+          const corsProxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+          response = await fetch(corsProxyUrl, { signal: controller.signal });
+        } else {
+          throw err;
+        }
       } finally {
         clearTimeout(timeout);
       }
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      if (!response || !response.ok) {
+        throw new Error(`HTTP ${response?.status || 'Error'} - فشل الاتصال بالسيرفر`);
       }
 
       const data = await response.json();
 
-      // الـ API يرجع: { status: true, result: { video_url, prompt, model, metadata } }
       if (!data?.status) {
         const msg = data?.message || data?.error || 'فشل توليد الفيديو';
-        const models = data?.models ? `\n📋 النماذج المتاحة: ${data.models.join('، ')}` : '';
-        throw new Error(msg + models);
+        throw new Error(msg);
       }
 
-      const videoUrl = data?.result?.video_url;
+      const videoUrl = data?.result?.video_url || data?.result?.url || data?.result;
       if (!videoUrl || typeof videoUrl !== 'string' || !videoUrl.startsWith('http')) {
         throw new Error('لم يتم استلام رابط فيديو صالح من الخدمة');
       }
 
       return {
         url: videoUrl,
-        prompt: data.result.prompt || prompt,
-        model: data.result.model || model,
-        metadata: data.result.metadata || {},
+        prompt: data.result?.prompt || prompt,
+        model: data.result?.model || model
       };
     }
 
@@ -321,13 +323,11 @@ const url = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
       loadingStatusText.textContent = `جارٍ توليد الفيديو بنموذج "${selectedModel}"...`;
       setBadge('جارٍ المعالجة...', 'blue');
 
-
       downloadBtn.href = '#';
       downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
       try {
         const result = await generateVideo(prompt, selectedModel);
-
 
         outputVideo.src = result.url;
         loadingState.classList.add('hidden');
@@ -356,7 +356,6 @@ const url = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
       }
     });
 
-    // ─── Enter في textarea (Ctrl+Enter) يشغّل التوليد ───
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
