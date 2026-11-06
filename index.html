@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taeha AI - مولد الفيديوهات بالذكاء الاصطناعي</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f5ff',
+              100: '#e0ebff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              accent: '#00f2fe',
+              neon: '#4facfe'
+            },
+            dark: {
+              bg: '#090d16',
+              card: '#111827',
+              border: '#1f2937'
+            }
+          },
+          fontFamily: {
+            sans: ['Tajawal', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #090d16;
+      color: #f3f4f6;
+      font-family: 'Tajawal', sans-serif;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #6366f1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-btn {
+      background: linear-gradient(135deg, #4f46e5 0%, #00f2fe 100%);
+      transition: all 0.3s ease;
+    }
+    .gradient-btn:hover {
+      opacity: 0.95;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+    .model-btn {
+      background: rgba(9, 13, 22, 0.9);
+      border: 1px solid #1f2937;
+      color: #d1d5db;
+      transition: all 0.2s ease;
+    }
+    .model-btn:hover {
+      background: rgba(31, 41, 55, 0.8);
+      color: #fff;
+    }
+    .model-btn.active {
+      background: linear-gradient(135deg, #4f46e5 0%, #00f2fe 100%);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+    }
+    .model-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+  <!-- Navbar -->
+  <header class="border-b border-dark-border glass-card sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl gradient-btn flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+          <i class="fa-solid font-bold text-xl fa-wand-magic-sparkles"></i>
+        </div>
+        <span class="text-2xl font-black gradient-text">Taeha AI</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <div class="bg-dark-bg/80 border border-dark-border px-4 py-2 rounded-full flex items-center gap-2">
+          <i class="fa-solid fa-coins text-amber-400"></i>
+          <span class="text-sm font-bold">الرصيد: <span id="userCredits" class="text-brand-accent">100</span> نقطة</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+    <!-- قسم المدخلات -->
+    <section class="lg:col-span-7 space-y-6">
+      <div class="glass-card p-6 rounded-3xl shadow-xl space-y-4">
+        <div class="flex justify-between items-center">
+          <label class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-pen-nib text-brand-accent"></i> وصف المشهد (Prompt)
+          </label>
+          <button id="randomPromptBtn" class="text-xs text-gray-400 hover:text-brand-accent transition flex items-center gap-1">
+            <i class="fa-solid fa-shuffle"></i> وصف عشوائي
+          </button>
+        </div>
+
+        <div class="relative">
+          <textarea id="promptInput" rows="4" dir="rtl"
+            class="w-full bg-dark-bg/90 border border-dark-border rounded-2xl p-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-brand-accent transition resize-none leading-relaxed"
+            placeholder="اكتب وصفاً باللغة الإنجليزية أو العربية للفيديو المطلوب (مثال: A cinematic view of a futuristic city)..."></textarea>
+        </div>
+
+        <!-- أقتباسات سريعة -->
+        <div class="flex flex-wrap gap-2 pt-1">
+          <span class="text-xs text-gray-400 self-center">أمثلة:</span>
+          <button class="quick-prompt bg-dark-bg hover:bg-gray-800 text-xs text-gray-300 border border-dark-border px-3 py-1.5 rounded-lg transition">Futuristic flying car in cyberpunk city</button>
+          <button class="quick-prompt bg-dark-bg hover:bg-gray-800 text-xs text-gray-300 border border-dark-border px-3 py-1.5 rounded-lg transition">Magical glowing forest under starry night</button>
+        </div>
+      </div>
+
+      <div class="glass-card p-6 rounded-3xl shadow-xl space-y-6">
+        <h3 class="font-bold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-brand-neon"></i> إعدادات التوليد
+        </h3>
+
+        <!-- اختيار النموذج (إلزامي من الـ API) -->
+        <div>
+          <label class="block text-sm font-bold text-gray-300 mb-3">
+            <i class="fa-solid fa-cube text-brand-accent"></i> النموذج (Model)
+          </label>
+          <div id="modelsRow" class="flex flex-wrap gap-2">
+            <button class="model-btn active px-4 py-2.5 rounded-xl text-sm font-bold" data-model="realistic">
+              <i class="fa-solid fa-camera-retro"></i> واقعي
+            </button>
+            <button class="model-btn px-4 py-2.5 rounded-xl text-sm font-bold" data-model="3d">
+              <i class="fa-solid fa-cubes"></i> ثلاثي الأبعاد
+            </button>
+            <button class="model-btn px-4 py-2.5 rounded-xl text-sm font-bold" data-model="anime">
+              <i class="fa-solid fa-star"></i> أنمي
+            </button>
+            <button class="model-btn px-4 py-2.5 rounded-xl text-sm font-bold" data-model="cartoon">
+              <i class="fa-solid fa-face-smile"></i> كرتوني
+            </button>
+          </div>
+        </div>
+
+        <button id="generateBtn" class="w-full gradient-btn py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-3 shadow-lg cursor-pointer">
+          <i class="fa-solid fa-bolt"></i>
+          <span>توليد الفيديو</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- قسم المعاينة والفيديو -->
+    <section class="lg:col-span-5 space-y-6 flex flex-col">
+      <div class="glass-card p-6 rounded-3xl shadow-xl flex-1 flex flex-col justify-between min-h-[420px]">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-film text-brand-accent"></i> معاينة الفيديو الناتج
+          </h3>
+          <span id="statusBadge" class="bg-gray-800 text-gray-400 text-xs px-3 py-1 rounded-full border border-dark-border">في الانتظار</span>
+        </div>
+
+        <div id="videoContainer" class="relative w-full aspect-video bg-dark-bg border border-dark-border rounded-2xl overflow-hidden flex flex-col items-center justify-center my-auto">
+
+          <div id="placeholderState" class="text-center p-6 space-y-3">
+            <div class="w-16 h-16 rounded-full bg-dark-card border border-dark-border flex items-center justify-center mx-auto text-gray-600">
+              <i class="fa-solid fa-video text-2xl"></i>
+            </div>
+            <p class="text-sm text-gray-500">اكتب وصفك واضغط توليد وسيتم جلب الفيديو من الـ API مباشرة</p>
+          </div>
+
+          <div id="loadingState" class="hidden text-center p-6 space-y-4 w-full">
+            <div class="w-16 h-16 border-4 border-brand-accent border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div class="space-y-1">
+              <p id="loadingStatusText" class="font-bold text-gray-200">جاري إرسال الطلب للـ API وتوليد الفيديو...</p>
+              <p class="text-xs text-gray-400">قد يستغرق الأمر من دقيقة إلى ثلاث دقائق</p>
+            </div>
+          </div>
+
+          <video id="outputVideo" class="hidden w-full h-full object-cover" controls autoplay loop playsinline></video>
+        </div>
+
+        <div class="mt-4">
+          <a id="downloadBtn" download="ai-video.mp4" class="w-full bg-dark-bg border border-dark-border opacity-50 cursor-not-allowed text-center py-3 rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition hover:bg-gray-800">
+            <i class="fa-solid fa-download"></i> تحميل الفيديو الناتج
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = 'https://api.jerexd.my.id/api/ai/txt2video';
+    const API_KEY  = 'XAv-gBIg9Y0ClWRe';
+    const MODELS   = ['3d', 'realistic', 'cartoon', 'anime'];
+    let selectedModel = 'realistic';
+
+    const promptInput     = document.getElementById('promptInput');
+    const generateBtn     = document.getElementById('generateBtn');
+    const placeholderState= document.getElementById('placeholderState');
+    const loadingState    = document.getElementById('loadingState');
+    const loadingStatusText = document.getElementById('loadingStatusText');
+    const outputVideo     = document.getElementById('outputVideo');
+    const statusBadge     = document.getElementById('statusBadge');
+    const downloadBtn     = document.getElementById('downloadBtn');
+    const modelsRow       = document.getElementById('modelsRow');
+
+    modelsRow.querySelectorAll('.model-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        modelsRow.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedModel = btn.getAttribute('data-model');
+      });
+    });
+
+    document.querySelectorAll('.quick-prompt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        promptInput.value = btn.innerText;
+      });
+    });
+
+    const randomPrompts = [
+      "A cinematic view of a futuristic flying car in a cyberpunk city",
+      "Magical glowing forest under a starry night sky",
+      "Stunning ocean waves crashing on a golden tropical beach",
+      "A majestic golden dragon flying over snowy mountains"
+    ];
+
+    document.getElementById('randomPromptBtn').addEventListener('click', () => {
+      const idx = Math.floor(Math.random() * randomPrompts.length);
+      promptInput.value = randomPrompts[idx];
+    });
+
+    const setModelsDisabled = (disabled) => {
+      modelsRow.querySelectorAll('.model-btn').forEach(b => b.disabled = disabled);
+    };
+
+
+    const setBadge = (text, color = 'gray') => {
+      statusBadge.innerText = text;
+      const map = {
+        gray:    'bg-gray-800 text-gray-400 border-dark-border',
+        blue:    'bg-blue-500/20 text-blue-300 border-blue-500/30',
+        emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+        red:     'bg-red-500/20 text-red-400 border-red-500/30',
+      };
+      statusBadge.className = `text-xs px-3 py-1 rounded-full border ${map[color] || map.gray}`;
+    };
+
+
+    async function generateVideo(prompt, model) {
+      const targetUrl = `${API_BASE}?apikey=${encodeURIComponent(API_KEY)}&prompt=${encodeURIComponent(prompt)}&model=${encodeURIComponent(model)}`;
+const url = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 180_000); // 3 دقائق
+
+      let response;
+      try {
+        response = await fetch(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // الـ API يرجع: { status: true, result: { video_url, prompt, model, metadata } }
+      if (!data?.status) {
+        const msg = data?.message || data?.error || 'فشل توليد الفيديو';
+        const models = data?.models ? `\n📋 النماذج المتاحة: ${data.models.join('، ')}` : '';
+        throw new Error(msg + models);
+      }
+
+      const videoUrl = data?.result?.video_url;
+      if (!videoUrl || typeof videoUrl !== 'string' || !videoUrl.startsWith('http')) {
+        throw new Error('لم يتم استلام رابط فيديو صالح من الخدمة');
+      }
+
+      return {
+        url: videoUrl,
+        prompt: data.result.prompt || prompt,
+        model: data.result.model || model,
+        metadata: data.result.metadata || {},
+      };
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      const prompt = promptInput.value.trim();
+      if (!prompt) {
+        alert('يرجى كتابة وصف المشهد أولاً!');
+        return;
+      }
+
+      generateBtn.disabled = true;
+      generateBtn.classList.add('opacity-50');
+      setModelsDisabled(true);
+
+      placeholderState.classList.add('hidden');
+      outputVideo.classList.add('hidden');
+      outputVideo.src = '';
+      loadingState.classList.remove('hidden');
+      loadingStatusText.textContent = `جارٍ توليد الفيديو بنموذج "${selectedModel}"...`;
+      setBadge('جارٍ المعالجة...', 'blue');
+
+
+      downloadBtn.href = '#';
+      downloadBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+      try {
+        const result = await generateVideo(prompt, selectedModel);
+
+
+        outputVideo.src = result.url;
+        loadingState.classList.add('hidden');
+        outputVideo.classList.remove('hidden');
+        setBadge('تم الإنشاء بنجاح', 'emerald');
+
+        downloadBtn.href = result.url;
+        downloadBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        outputVideo.play().catch(() => {});
+
+      } catch (err) {
+        console.error(err);
+        const isAbort = err.name === 'AbortError';
+        alert(isAbort
+          ? 'انتهت مهلة الانتظار (3 دقائق). جرّب وصفاً أقصر أو نموذجاً آخر.'
+          : 'حدث خطأ أثناء جلب الفيديو: ' + (err.message || err)
+        );
+        loadingState.classList.add('hidden');
+        placeholderState.classList.remove('hidden');
+        setBadge(isAbort ? 'انتهت المهلة' : 'خطأ', 'red');
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.classList.remove('opacity-50');
+        setModelsDisabled(false);
+      }
+    });
+
+    // ─── Enter في textarea (Ctrl+Enter) يشغّل التوليد ───
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        generateBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
